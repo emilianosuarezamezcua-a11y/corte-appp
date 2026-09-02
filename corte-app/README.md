@@ -27,3 +27,4 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 
 ## Roadmap
 See the homepage for the week-by-week plan.
+- Week 1: Building sale and expense logging
