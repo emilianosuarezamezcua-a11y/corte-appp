@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 
 function extractCore(text) {
   const sentences = text.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 0);
@@ -54,6 +55,22 @@ export default function CorePage() {
   const [inputText, setInputText] = useState('');
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState('');
+  const [recent, setRecent] = useState([]);
+
+  async function loadRecent() {
+    const { data } = await supabase
+      .from('core_outputs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5);
+    setRecent(data || []);
+  }
+
+  useEffect(() => {
+    loadRecent();
+  }, []);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -63,7 +80,27 @@ export default function CorePage() {
       return;
     }
     setError('');
+    setSavedMsg('');
     setResult(extractCore(inputText));
+  }
+
+  async function handleSave() {
+    if (!result) return;
+    setSaving(true);
+    const { error: saveError } = await supabase.from('core_outputs').insert({
+      input_text: inputText,
+      extracted_problem: result.problem,
+      extracted_user: result.user,
+      extracted_value: result.value,
+      extracted_keywords: result.keywords,
+    });
+    setSaving(false);
+    if (saveError) {
+      setSavedMsg('Save failed. Please try again.');
+    } else {
+      setSavedMsg('Saved');
+      loadRecent();
+    }
   }
 
   return (
@@ -90,11 +127,11 @@ export default function CorePage() {
       </form>
 
       {result && (
-        <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+        <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 mb-8">
           <p className="text-xs text-gray-400 mb-4">
             Simulated extraction (rule-based, no AI API)
           </p>
-          <div className="space-y-3">
+          <div className="space-y-3 mb-4">
             <div>
               <p className="text-sm text-gray-500">Problem</p>
               <p className="text-sm">{result.problem}</p>
@@ -112,8 +149,33 @@ export default function CorePage() {
               <p className="text-sm">{result.keywords}</p>
             </div>
           </div>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-white border border-gray-300 px-6 py-2 rounded-lg"
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+          {savedMsg && <p className="text-sm text-green-600 mt-2">{savedMsg}</p>}
         </div>
       )}
+
+      <div>
+        <p className="text-sm text-gray-500 mb-2">Recently saved</p>
+        <div className="space-y-2">
+          {recent.length === 0 && (
+            <p className="text-sm text-gray-400">Nothing saved yet.</p>
+          )}
+          {recent.map((r) => (
+            <div key={r.id} className="border border-gray-200 rounded-lg p-3">
+              <p className="text-xs text-gray-400 mb-1">
+                {new Date(r.created_at).toLocaleString()}
+              </p>
+              <p className="text-sm">{r.extracted_problem}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
