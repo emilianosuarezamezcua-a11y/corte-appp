@@ -1,3 +1,4 @@
+// Homepage: shows roadmap for the project
 export default function Home() {
   const roadmap = [
     { week: 'Week 0', item: 'Infrastructure setup: GitHub, Vercel, Supabase, Next.js' },
