@@ -96,7 +96,7 @@ export default function CorePage() {
     });
     setSaving(false);
     if (saveError) {
-      setSavedMsg('Save failed. Please try again.');
+      setSavedMsg('Save failed: ' + saveError.message);
     } else {
       setSavedMsg('Saved');
       loadRecent();
