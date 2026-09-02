@@ -1,3 +1,4 @@
+// Navbar: home and docs links
 export default function Navbar() {
   return (
     <nav className="w-full border-b border-gray-200 bg-white">
