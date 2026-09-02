@@ -4,17 +4,27 @@ import { useState } from 'react';
 
 function extractCore(text) {
   const sentences = text.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 0);
+  const used = new Set();
 
   function findSentence(keywords) {
-    const found = sentences.find((s) =>
-      keywords.some((k) => s.toLowerCase().includes(k))
+    const idx = sentences.findIndex(
+      (s, i) => !used.has(i) && keywords.some((k) => s.toLowerCase().includes(k))
     );
-    return found || sentences[0] || '';
+    if (idx !== -1) {
+      used.add(idx);
+      return sentences[idx];
+    }
+    const fallbackIdx = sentences.findIndex((s, i) => !used.has(i));
+    if (fallbackIdx !== -1) {
+      used.add(fallbackIdx);
+      return sentences[fallbackIdx];
+    }
+    return sentences[0] || '';
   }
 
   const problem = findSentence(['problem', "don't have", 'lack', 'struggle']);
-  const user = findSentence(['user', 'owner', 'customer', 'vendor']);
-  const value = findSentence(['value', 'tracker', 'solution', 'simple']);
+  const user = findSentence(['user', 'owner-operator', 'customer', 'vendor']);
+  const value = findSentence(['value', 'tracker', 'solution', 'offers']);
 
   const stopwords = new Set([
     'the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'was', 'were',
