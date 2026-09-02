@@ -1,3 +1,4 @@
+// Footer: shown on every page
 export default function Footer() {
   return (
     <footer className="w-full border-t border-gray-200 bg-white">
