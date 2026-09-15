@@ -43,10 +43,11 @@ const COMPETITORS = [
 ];
 
 const RISKS = [
-  { label: 'Distrust of apps for cash businesses', x: 75, y: 30 },
-  { label: 'Why not just use Excel', x: 30, y: 65 },
-  { label: 'Clip/Poster bundling payments + tracking', x: 60, y: 70 },
-  { label: 'Low smartphone/data reliability at stalls', x: 20, y: 25 },
+  { label: 'Distrust of apps for cash businesses', x: 75, y: 30, self: false },
+  { label: 'Why not just use Excel', x: 30, y: 65, self: false },
+  { label: 'Clip/Poster bundling payments + tracking', x: 60, y: 70, self: false },
+  { label: 'Low smartphone/data reliability at stalls', x: 20, y: 25, self: false },
+  { label: 'Corte App (you)', x: 15, y: 55, self: true },
 ];
 
 function ResearchIntake({ onSaved }) {
@@ -213,20 +214,20 @@ export default function ResearchPage() {
       <section className="mb-10">
         <h2 className="text-xl font-semibold mb-4">Risk map</h2>
         <p className="text-xs text-gray-400 mb-2">
-          Horizontal: competitive threat. Vertical: adoption difficulty.
+          Horizontal: competitive threat. Vertical: adoption difficulty. Blue dot: where Corte App sits today.
         </p>
         <div className="relative w-full h-56 border border-gray-200 rounded-lg bg-gray-50">
           {RISKS.map(function (r) {
+            const dotClass = (r.self ? 'bg-blue-600' : 'bg-gray-900') + ' w-2.5 h-2.5 rounded-full mb-1';
+            const labelClass = (r.self ? 'font-semibold text-blue-700' : 'text-gray-600') + ' text-[10px] text-center w-24 leading-tight';
             return (
               <div
                 key={r.label}
                 className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
                 style={{ left: r.x + '%', top: r.y + '%' }}
               >
-                <span className="w-2.5 h-2.5 rounded-full bg-gray-900 mb-1" />
-                <span className="text-[10px] text-gray-600 text-center w-24 leading-tight">
-                  {r.label}
-                </span>
+                <span className={dotClass} />
+                <span className={labelClass}>{r.label}</span>
               </div>
             );
           })}
