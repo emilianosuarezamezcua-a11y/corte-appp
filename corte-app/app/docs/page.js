@@ -36,6 +36,12 @@ export default function Docs() {
         <code className="bg-gray-100 px-1 rounded">core_outputs</code>, and
         the 5 most recent saved entries are shown on the same page.
       </p>
+          <div className="mt-10">
+  <h2 className="text-xl font-semibold mb-2">Research + benchmarking (Week 2)</h2>
+  <p className="text-sm text-gray-600">
+    The /research page uses hand-researched, static data (5 global examples and 8 competitors/substitutes) instead of a live API, since no paid data source is allowed and the comparison set does not change day to day. New findings can still be added at runtime through the research note form, which saves to Supabase.
+  </p>
+</div>
     </div>
   );
 }
