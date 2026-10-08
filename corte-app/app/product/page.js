@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 const FEATURES = [
   { name: 'Daily profit/expense tracking', free: true, growth: true, pro: true },
   { name: 'Research + benchmarking dashboard', free: false, growth: true, pro: true },
@@ -82,6 +84,14 @@ export default function ProductPage() {
               </div>
             );
           })}
+        </div>
+        <div className="mt-6">
+          <Link
+            href="/pricing"
+            className="inline-block bg-gray-900 text-white px-6 py-2 rounded-lg text-sm"
+          >
+            Try the pricing simulator
+          </Link>
         </div>
       </section>
 
