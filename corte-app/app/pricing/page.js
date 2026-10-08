@@ -90,8 +90,9 @@ function PricingCalculator() {
         <h2 className="text-xl font-semibold mb-4">Revenue calculator</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Vendor count</label>
+            <label htmlFor="vendor-count" className="block text-sm text-gray-600 mb-1">Vendor count</label>
             <input
+              id="vendor-count"
               type="number"
               value={vendorCount}
               onChange={function (e) { setVendorCount(Number(e.target.value)); }}
@@ -99,8 +100,9 @@ function PricingCalculator() {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Growth tier %</label>
+            <label htmlFor="growth-pct" className="block text-sm text-gray-600 mb-1">Growth tier %</label>
             <input
+              id="growth-pct"
               type="number"
               value={growthPct}
               onChange={function (e) { setGrowthPct(Number(e.target.value)); }}
@@ -108,8 +110,9 @@ function PricingCalculator() {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Pro tier %</label>
+            <label htmlFor="pro-pct" className="block text-sm text-gray-600 mb-1">Pro tier %</label>
             <input
+              id="pro-pct"
               type="number"
               value={proPct}
               onChange={function (e) { setProPct(Number(e.target.value)); }}
@@ -119,8 +122,9 @@ function PricingCalculator() {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm text-gray-600 mb-1">Scenario</label>
+          <label htmlFor="scenario-select" className="block text-sm text-gray-600 mb-1">Scenario</label>
           <select
+            id="scenario-select"
             value={scenarioType}
             onChange={function (e) { setScenarioType(e.target.value); }}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
@@ -130,7 +134,7 @@ function PricingCalculator() {
           </select>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <div className="bg-gray-50 rounded-lg p-4 mb-4" aria-live="polite">
           <p className="text-sm text-gray-600">Monthly revenue</p>
           <p className="text-2xl font-bold">${monthlyRevenue.toFixed(2)} MXN</p>
           <p className="text-sm text-gray-600 mt-2">Annual revenue</p>
@@ -160,15 +164,16 @@ function PricingCalculator() {
         </table>
 
         <form onSubmit={handleSave}>
-          <label className="block text-sm text-gray-600 mb-1">Scenario name</label>
+          <label htmlFor="scenario-name" className="block text-sm text-gray-600 mb-1">Scenario name</label>
           <input
+            id="scenario-name"
             type="text"
             value={scenarioName}
             onChange={function (e) { setScenarioName(e.target.value); }}
             placeholder="e.g. Base case for month 1"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2"
           />
-          {error ? <p className="text-red-600 text-sm mb-2">{error}</p> : null}
+          {error ? <p role="alert" className="text-red-600 text-sm mb-2">{error}</p> : null}
           <button
             type="submit"
             disabled={saving}
@@ -176,7 +181,7 @@ function PricingCalculator() {
           >
             {saving ? 'Saving...' : 'Save scenario'}
           </button>
-          {savedMsg ? <p className="text-sm text-green-600 mt-2">{savedMsg}</p> : null}
+          {savedMsg ? <p role="status" className="text-sm text-green-600 mt-2">{savedMsg}</p> : null}
         </form>
       </section>
 
