@@ -37,7 +37,7 @@ export default function Home() {
           For small food vendors and restaurant owners
         </p>
         <h1 className="text-4xl md:text-5xl font-bold mb-4 max-w-2xl">
-          Know your profit before you close the day
+          Stop guessing. See what you really earned today
         </h1>
         <p className="text-lg text-gray-600 max-w-xl mb-8">
           Corte App is a simple daily profit and expense tracker for people who
