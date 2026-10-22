@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 import { POSTS, SCRIPTS, CALENDAR } from './content';
 
 const BRAND = {
@@ -52,6 +54,130 @@ const LANDING = {
   ],
   cta: 'Start tracking today',
 };
+
+function ABTest(props) {
+  const testName = props.testName;
+  const [counts, setCounts] = useState({ A: 0, B: 0 });
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function loadCounts() {
+    const result = await supabase
+      .from('ab_votes')
+      .select('variant')
+      .eq('test_name', testName);
+    if (result.error) {
+      setError('Could not load results: ' + result.error.message);
+      return;
+    }
+    const rows = result.data || [];
+    let a = 0;
+    let b = 0;
+    rows.forEach(function (r) {
+      if (r.variant === 'A') {
+        a = a + 1;
+      } else if (r.variant === 'B') {
+        b = b + 1;
+      }
+    });
+    setCounts({ A: a, B: b });
+  }
+
+  useEffect(function () {
+    loadCounts();
+  }, []);
+
+  async function vote(variant) {
+    setSaving(true);
+    setMessage('');
+    setError('');
+    const result = await supabase.from('ab_votes').insert({
+      test_name: testName,
+      variant: variant,
+    });
+    setSaving(false);
+    if (result.error) {
+      setError('Vote failed: ' + result.error.message);
+    } else {
+      setMessage('Vote saved for option ' + variant);
+      loadCounts();
+    }
+  }
+
+  const total = counts.A + counts.B;
+  const pctA = total === 0 ? 0 : Math.round((counts.A / total) * 100);
+  const pctB = total === 0 ? 0 : 100 - pctA;
+
+  let leader = 'No votes yet';
+  if (total > 0) {
+    if (counts.A === counts.B) {
+      leader = 'Tied';
+    } else if (counts.A > counts.B) {
+      leader = 'Option A is leading';
+    } else {
+      leader = 'Option B is leading';
+    }
+  }
+
+  return (
+    <div className="border border-gray-200 rounded-lg p-5 bg-white">
+      <h3 className="font-semibold mb-1">{props.title}</h3>
+      <p className="text-sm text-gray-600 mb-4">{props.question}</p>
+
+      <div className="space-y-4">
+        <div>
+          <p className="text-xs font-medium text-emerald-700 mb-1">Option A</p>
+          <p className="text-sm text-gray-800 mb-2">{props.variantA}</p>
+          <div className="w-full bg-gray-100 rounded h-2 mb-1">
+            <div className="bg-emerald-600 h-2 rounded" style={{ width: pctA + '%' }} />
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-600">
+              {counts.A} votes ({pctA}%)
+            </p>
+            <button
+              type="button"
+              onClick={function () { vote('A'); }}
+              disabled={saving}
+              className="bg-gray-900 text-white px-4 py-1 rounded-lg text-sm disabled:opacity-40"
+            >
+              Vote A
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-emerald-700 mb-1">Option B</p>
+          <p className="text-sm text-gray-800 mb-2">{props.variantB}</p>
+          <div className="w-full bg-gray-100 rounded h-2 mb-1">
+            <div className="bg-emerald-600 h-2 rounded" style={{ width: pctB + '%' }} />
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-600">
+              {counts.B} votes ({pctB}%)
+            </p>
+            <button
+              type="button"
+              onClick={function () { vote('B'); }}
+              disabled={saving}
+              className="bg-gray-900 text-white px-4 py-1 rounded-lg text-sm disabled:opacity-40"
+            >
+              Vote B
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 pt-3 border-t border-gray-100" aria-live="polite">
+        <p className="text-sm font-medium">{leader}</p>
+        <p className="text-xs text-gray-500">Total votes: {total}</p>
+      </div>
+      {error ? <p role="alert" className="text-red-600 text-sm mt-2">{error}</p> : null}
+      {message ? <p role="status" className="text-green-600 text-sm mt-2">{message}</p> : null}
+    </div>
+  );
+}
 
 export default function MarketingPage() {
   return (
@@ -162,6 +288,30 @@ export default function MarketingPage() {
           <span className="inline-block bg-gray-900 text-white px-6 py-2 rounded-lg text-sm">
             {LANDING.cta}
           </span>
+        </div>
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-xl font-semibold mb-1">A/B tests</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Ask a real person which version they prefer and click their choice. Each click saves one
+          vote. A small sample shows a direction, not proof.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ABTest
+            testName="headline_test"
+            title="Test 1: Headline"
+            question="Which headline would make you want to try the app?"
+            variantA="Know your profit before you close the day"
+            variantB="Stop guessing. See what you really earned today"
+          />
+          <ABTest
+            testName="cta_test"
+            title="Test 2: Button text"
+            question="Which button would you click?"
+            variantA="Start tracking today"
+            variantB="See my daily profit"
+          />
         </div>
       </section>
 
