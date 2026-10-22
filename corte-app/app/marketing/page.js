@@ -1,5 +1,7 @@
 'use client';
 
+import { POSTS, SCRIPTS, CALENDAR } from './content';
+
 const BRAND = {
   name: 'Corte App',
   tagline: 'Close your day knowing your numbers.',
@@ -160,6 +162,75 @@ export default function MarketingPage() {
           <span className="inline-block bg-gray-900 text-white px-6 py-2 rounded-lg text-sm">
             {LANDING.cta}
           </span>
+        </div>
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-xl font-semibold mb-4">Social posts ({POSTS.length})</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {POSTS.map(function (p) {
+            return (
+              <div key={p.id} className="border border-gray-200 rounded-lg p-4 bg-white">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
+                    {p.platform}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    #{p.id} &middot; {p.type}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-700">{p.text}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-xl font-semibold mb-4">Video scripts ({SCRIPTS.length})</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {SCRIPTS.map(function (s) {
+            return (
+              <div key={s.id} className="border border-gray-200 rounded-lg p-4 bg-white">
+                <p className="font-semibold">{s.title}</p>
+                <p className="text-xs text-gray-500 mb-3">{s.length}</p>
+                <p className="text-xs font-medium text-emerald-700">Hook</p>
+                <p className="text-sm text-gray-700 mb-2">{s.hook}</p>
+                <p className="text-xs font-medium text-emerald-700">Body</p>
+                <p className="text-sm text-gray-700 mb-2">{s.body}</p>
+                <p className="text-xs font-medium text-emerald-700">Call to action</p>
+                <p className="text-sm text-gray-700">{s.cta}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-xl font-semibold mb-4">14-day campaign calendar</h2>
+        <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-50 text-gray-600">
+              <tr>
+                <th className="px-4 py-2 font-medium">Day</th>
+                <th className="px-4 py-2 font-medium">Channel</th>
+                <th className="px-4 py-2 font-medium">Content</th>
+                <th className="px-4 py-2 font-medium">Goal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {CALENDAR.map(function (row) {
+                return (
+                  <tr key={row.day} className="border-t border-gray-100">
+                    <td className="px-4 py-2 font-medium">{row.day}</td>
+                    <td className="px-4 py-2 text-gray-700">{row.channel}</td>
+                    <td className="px-4 py-2 text-gray-700">{row.content}</td>
+                    <td className="px-4 py-2 text-gray-700">{row.goal}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </section>
     </main>
