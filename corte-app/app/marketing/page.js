@@ -55,6 +55,147 @@ const LANDING = {
   cta: 'Start tracking today',
 };
 
+function landingText() {
+  return (
+    LANDING.headline +
+    '\n' +
+    LANDING.subheadline +
+    '\n- ' +
+    LANDING.benefits.join('\n- ') +
+    '\nCall to action: ' +
+    LANDING.cta
+  );
+}
+
+function scriptText(s) {
+  return (
+    'Hook: ' + s.hook + '\nBody: ' + s.body + '\nCall to action: ' + s.cta
+  );
+}
+
+function buildKit() {
+  const lines = [];
+  lines.push('CORTE APP MARKETING KIT');
+  lines.push('');
+  lines.push('BRAND');
+  lines.push('Name: ' + BRAND.name);
+  lines.push('Tagline: ' + BRAND.tagline);
+  lines.push('Mission: ' + BRAND.mission);
+  COLORS.forEach(function (c) {
+    lines.push('Color: ' + c.name + ' ' + c.hex + ' (' + c.use + ')');
+  });
+  VOICE.forEach(function (v) {
+    lines.push('Voice: ' + v);
+  });
+  lines.push('');
+  lines.push('TARGET PERSONA (fictional)');
+  lines.push(PERSONA.name + ', ' + PERSONA.age + ' - ' + PERSONA.role);
+  lines.push('Quote: ' + PERSONA.quote);
+  PERSONA.goals.forEach(function (g) {
+    lines.push('Goal: ' + g);
+  });
+  PERSONA.pains.forEach(function (p) {
+    lines.push('Pain: ' + p);
+  });
+  lines.push('Channels: ' + PERSONA.channels.join(', '));
+  lines.push('');
+  lines.push('LANDING PAGE COPY');
+  lines.push(landingText());
+  lines.push('');
+  lines.push('SOCIAL POSTS');
+  POSTS.forEach(function (p) {
+    lines.push('#' + p.id + ' [' + p.platform + ' - ' + p.type + '] ' + p.text);
+  });
+  lines.push('');
+  lines.push('VIDEO SCRIPTS');
+  SCRIPTS.forEach(function (s) {
+    lines.push(s.id + '. ' + s.title + ' (' + s.length + ')');
+    lines.push(scriptText(s));
+    lines.push('');
+  });
+  lines.push('14-DAY CAMPAIGN CALENDAR');
+  CALENDAR.forEach(function (row) {
+    lines.push(
+      'Day ' + row.day + ' | ' + row.channel + ' | ' + row.content + ' | ' + row.goal
+    );
+  });
+  return lines.join('\n');
+}
+
+function exportKit() {
+  const blob = new Blob([buildKit()], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'corte-app-marketing-kit.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function CopyButton(props) {
+  const [label, setLabel] = useState('Copy');
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(props.text);
+      setLabel('Copied');
+    } catch (e) {
+      setLabel('Copy failed');
+    }
+    setTimeout(function () {
+      setLabel('Copy');
+    }, 1500);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="border border-gray-300 text-gray-800 bg-white px-3 py-1 rounded-lg text-xs"
+    >
+      {label}
+    </button>
+  );
+}
+
+function SaveButton(props) {
+  const [label, setLabel] = useState('Save');
+  const [busy, setBusy] = useState(false);
+
+  async function handleSave() {
+    setBusy(true);
+    setLabel('Saving...');
+    const result = await supabase.from('marketing_assets').insert({
+      asset_type: props.assetType,
+      title: props.title,
+      content: props.content,
+    });
+    setBusy(false);
+    if (result.error) {
+      setLabel('Save failed');
+    } else {
+      setLabel('Saved');
+      props.onSaved();
+    }
+    setTimeout(function () {
+      setLabel('Save');
+    }, 1500);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleSave}
+      disabled={busy}
+      className="bg-gray-900 text-white px-3 py-1 rounded-lg text-xs disabled:opacity-40"
+    >
+      {label}
+    </button>
+  );
+}
+
 function ABTest(props) {
   const testName = props.testName;
   const [counts, setCounts] = useState({ A: 0, B: 0 });
@@ -180,15 +321,52 @@ function ABTest(props) {
 }
 
 export default function MarketingPage() {
+  const [saved, setSaved] = useState([]);
+  const [loadError, setLoadError] = useState('');
+  const [exportMsg, setExportMsg] = useState('');
+
+  async function loadSaved() {
+    const result = await supabase
+      .from('marketing_assets')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5);
+    if (result.error) {
+      setLoadError('Could not load saved assets: ' + result.error.message);
+      return;
+    }
+    setLoadError('');
+    setSaved(result.data || []);
+  }
+
+  useEffect(function () {
+    loadSaved();
+  }, []);
+
+  function handleExport() {
+    exportKit();
+    setExportMsg('Exported corte-app-marketing-kit.txt');
+  }
+
   return (
     <main className="max-w-5xl mx-auto px-6 py-10">
       <h1 className="text-2xl font-bold mb-2">Marketing engine</h1>
       <p className="text-gray-600 mb-2">
         The brand, the audience and the message for Corte App, all in one place.
       </p>
-      <p className="text-xs text-gray-500 mb-10">
+      <p className="text-xs text-gray-500 mb-4">
         All content on this page was written with AI help and edited by me. It is not generated live.
       </p>
+      <div className="flex items-center gap-3 mb-10">
+        <button
+          type="button"
+          onClick={handleExport}
+          className="bg-gray-900 text-white px-5 py-2 rounded-lg text-sm"
+        >
+          Export full kit (.txt)
+        </button>
+        {exportMsg ? <p role="status" className="text-sm text-green-600">{exportMsg}</p> : null}
+      </div>
 
       <section className="mb-12">
         <h2 className="text-xl font-semibold mb-4">Brand system</h2>
@@ -285,9 +463,18 @@ export default function MarketingPage() {
             })}
           </ul>
           <p className="text-sm text-gray-500 mb-1">Call to action</p>
-          <span className="inline-block bg-gray-900 text-white px-6 py-2 rounded-lg text-sm">
+          <span className="inline-block bg-gray-900 text-white px-6 py-2 rounded-lg text-sm mb-4">
             {LANDING.cta}
           </span>
+          <div className="flex gap-2 pt-3 border-t border-gray-100">
+            <CopyButton text={landingText()} />
+            <SaveButton
+              assetType="landing_copy"
+              title="Landing page copy"
+              content={landingText()}
+              onSaved={loadSaved}
+            />
+          </div>
         </div>
       </section>
 
@@ -329,7 +516,16 @@ export default function MarketingPage() {
                     #{p.id} &middot; {p.type}
                   </span>
                 </div>
-                <p className="text-sm text-gray-700">{p.text}</p>
+                <p className="text-sm text-gray-700 mb-3">{p.text}</p>
+                <div className="flex gap-2">
+                  <CopyButton text={p.text} />
+                  <SaveButton
+                    assetType="social_post"
+                    title={'Post #' + p.id + ' (' + p.platform + ')'}
+                    content={p.text}
+                    onSaved={loadSaved}
+                  />
+                </div>
               </div>
             );
           })}
@@ -349,7 +545,16 @@ export default function MarketingPage() {
                 <p className="text-xs font-medium text-emerald-700">Body</p>
                 <p className="text-sm text-gray-700 mb-2">{s.body}</p>
                 <p className="text-xs font-medium text-emerald-700">Call to action</p>
-                <p className="text-sm text-gray-700">{s.cta}</p>
+                <p className="text-sm text-gray-700 mb-3">{s.cta}</p>
+                <div className="flex gap-2">
+                  <CopyButton text={scriptText(s)} />
+                  <SaveButton
+                    assetType="video_script"
+                    title={'Script: ' + s.title}
+                    content={scriptText(s)}
+                    onSaved={loadSaved}
+                  />
+                </div>
               </div>
             );
           })}
@@ -382,6 +587,34 @@ export default function MarketingPage() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-xl font-semibold mb-1">Saved marketing assets</h2>
+        <p className="text-xs text-gray-500 mb-4">The 5 most recently saved items.</p>
+        {loadError ? <p role="alert" className="text-red-600 text-sm mb-2">{loadError}</p> : null}
+        {saved.length === 0 ? (
+          <p className="text-sm text-gray-600">Nothing saved yet. Use the Save buttons above.</p>
+        ) : (
+          <div className="space-y-3">
+            {saved.map(function (a) {
+              const body = String(a.content || '');
+              const preview = body.length > 140 ? body.slice(0, 140) + '...' : body;
+              return (
+                <div key={a.id} className="border border-gray-200 rounded-lg p-4 bg-white">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="font-medium text-sm">{a.title}</p>
+                    <span className="text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
+                      {String(a.asset_type || '').replace('_', ' ')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-3">{preview}</p>
+                  <CopyButton text={body} />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </main>
   );
