@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 
 const WELCOME = 'Hi! I am the Corte App guide. I can help you find the right plan in 3 quick questions.';
 
@@ -79,14 +80,22 @@ function getReply(text) {
   return 'I am not sure about that one. I can answer questions about price, profit, expenses, and how the app works.';
 }
 
-function getRecommendation(answers) {
-  let plan = 'Free';
-  let price = 'free';
+function getPlan(answers) {
   if (answers.business_type === 'Street stand') {
-    plan = 'Growth';
+    return 'Growth';
+  }
+  if (answers.business_type === 'Small restaurant') {
+    return 'Pro';
+  }
+  return 'Free';
+}
+
+function getRecommendation(answers) {
+  const plan = getPlan(answers);
+  let price = 'free';
+  if (plan === 'Growth') {
     price = '$99 MXN per month';
-  } else if (answers.business_type === 'Small restaurant') {
-    plan = 'Pro';
+  } else if (plan === 'Pro') {
     price = '$199 MXN per month';
   }
 
@@ -123,6 +132,9 @@ export default function ChatPage() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [input, setInput] = useState('');
+  const [sessionId, setSessionId] = useState(null);
+  const [guardrailSeen, setGuardrailSeen] = useState(false);
+  const [humanRequested, setHumanRequested] = useState(false);
 
   function handleStart() {
     setStarted(true);
@@ -134,6 +146,39 @@ export default function ChatPage() {
     );
   }
 
+  async function saveNewSession(finalAnswers) {
+    const result = await supabase
+      .from('chat_sessions')
+      .insert({
+        business_type: finalAnswers.business_type,
+        tracking_method: finalAnswers.tracking_method,
+        main_problem: finalAnswers.main_problem,
+        recommended_plan: getPlan(finalAnswers),
+      })
+      .select('id')
+      .single();
+
+    if (result.error || !result.data) {
+      setMessages(function (prev) {
+        return prev.concat([
+          {
+            role: 'assistant',
+            text: 'Note: I could not save this chat, but you can keep using it.',
+          },
+        ]);
+      });
+    } else {
+      setSessionId(result.data.id);
+    }
+  }
+
+  async function updateSession(fields) {
+    if (!sessionId) {
+      return;
+    }
+    await supabase.from('chat_sessions').update(fields).eq('id', sessionId);
+  }
+
   function handleAnswer(option) {
     const current = QUESTIONS[step];
     const newAnswers = Object.assign({}, answers);
@@ -142,8 +187,9 @@ export default function ChatPage() {
 
     const newMessages = messages.concat([{ role: 'user', text: option }]);
     const nextStep = step + 1;
+    const finished = nextStep >= QUESTIONS.length;
 
-    if (nextStep < QUESTIONS.length) {
+    if (!finished) {
       newMessages.push({ role: 'assistant', text: QUESTIONS[nextStep].text });
     } else {
       newMessages.push({ role: 'assistant', text: getRecommendation(newAnswers) });
@@ -155,6 +201,10 @@ export default function ChatPage() {
 
     setMessages(newMessages);
     setStep(nextStep);
+
+    if (finished) {
+      saveNewSession(newAnswers);
+    }
   }
 
   function handleSend(e) {
@@ -165,8 +215,11 @@ export default function ChatPage() {
     }
 
     let reply = '';
+    let triggered = guardrailSeen;
     if (isGuardrail(text)) {
       reply = GUARDRAIL_REPLY;
+      triggered = true;
+      setGuardrailSeen(true);
     } else {
       reply = getReply(text);
     }
@@ -178,6 +231,29 @@ export default function ChatPage() {
       ])
     );
     setInput('');
+
+    updateSession({ last_question: text, guardrail_triggered: triggered });
+  }
+
+  function handleHuman() {
+    if (humanRequested) {
+      return;
+    }
+    setHumanRequested(true);
+
+    let reply = 'Done. I marked this chat so Emiliano can review it.';
+    if (!sessionId) {
+      reply = 'I could not mark this chat because it was not saved.';
+    }
+
+    setMessages(
+      messages.concat([
+        { role: 'user', text: 'Ask Emiliano to review this' },
+        { role: 'assistant', text: reply },
+      ])
+    );
+
+    updateSession({ needs_human: true });
   }
 
   const showOptions = started && step < QUESTIONS.length;
@@ -189,8 +265,11 @@ export default function ChatPage() {
       <p className="text-gray-600 mb-4">
         Answer a few quick questions and get a plan that fits your business.
       </p>
-      <p className="text-xs text-gray-500 mb-6">
+      <p className="text-xs text-gray-500 mb-2">
         Fixed-rule assistant, not a live AI. It follows set rules and does not use an AI model.
+      </p>
+      <p className="text-xs text-gray-500 mb-6">
+        Your answers are saved to test this app. Please do not type personal information.
       </p>
 
       <div
@@ -231,23 +310,32 @@ export default function ChatPage() {
       ) : null}
 
       {showInput ? (
-        <form onSubmit={handleSend} className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={function (e) {
-              setInput(e.target.value);
-            }}
-            placeholder="Type your question here"
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm"
-          />
+        <div>
+          <form onSubmit={handleSend} className="flex gap-2 mb-3">
+            <input
+              type="text"
+              value={input}
+              onChange={function (e) {
+                setInput(e.target.value);
+              }}
+              placeholder="Type your question here"
+              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm"
+            />
+            <button
+              type="submit"
+              className="bg-gray-900 text-white px-6 py-2 rounded-lg text-sm"
+            >
+              Send
+            </button>
+          </form>
           <button
-            type="submit"
-            className="bg-gray-900 text-white px-6 py-2 rounded-lg text-sm"
+            onClick={handleHuman}
+            disabled={humanRequested}
+            className="border border-gray-300 bg-white text-gray-900 px-4 py-2 rounded-lg text-sm hover:bg-gray-100 disabled:opacity-50"
           >
-            Send
+            Ask Emiliano to review this
           </button>
-        </form>
+        </div>
       ) : null}
     </div>
   );
