@@ -135,6 +135,9 @@ export default function ChatPage() {
   const [sessionId, setSessionId] = useState(null);
   const [guardrailSeen, setGuardrailSeen] = useState(false);
   const [humanRequested, setHumanRequested] = useState(false);
+  const [rating, setRating] = useState(null);
+  const [comment, setComment] = useState('');
+  const [commentSent, setCommentSent] = useState(false);
 
   function handleStart() {
     setStarted(true);
@@ -256,6 +259,21 @@ export default function ChatPage() {
     updateSession({ needs_human: true });
   }
 
+  function handleRating(value) {
+    setRating(value);
+    updateSession({ rating: value });
+  }
+
+  function handleComment(e) {
+    e.preventDefault();
+    const text = comment.trim();
+    if (!text) {
+      return;
+    }
+    setCommentSent(true);
+    updateSession({ comment: text });
+  }
+
   const showOptions = started && step < QUESTIONS.length;
   const showInput = started && step >= QUESTIONS.length;
 
@@ -335,6 +353,62 @@ export default function ChatPage() {
           >
             Ask Emiliano to review this
           </button>
+
+          <div className="mt-8 border-t border-gray-200 pt-6">
+            <p className="text-sm font-medium mb-3">Was this guide helpful?</p>
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={function () {
+                  handleRating('up');
+                }}
+                aria-label="Thumbs up"
+                className={
+                  rating === 'up'
+                    ? 'bg-gray-900 text-white px-4 py-2 rounded-lg text-sm'
+                    : 'border border-gray-300 bg-white text-gray-900 px-4 py-2 rounded-lg text-sm hover:bg-gray-100'
+                }
+              >
+                👍 Yes
+              </button>
+              <button
+                onClick={function () {
+                  handleRating('down');
+                }}
+                aria-label="Thumbs down"
+                className={
+                  rating === 'down'
+                    ? 'bg-gray-900 text-white px-4 py-2 rounded-lg text-sm'
+                    : 'border border-gray-300 bg-white text-gray-900 px-4 py-2 rounded-lg text-sm hover:bg-gray-100'
+                }
+              >
+                👎 No
+              </button>
+            </div>
+
+            {rating && !commentSent ? (
+              <form onSubmit={handleComment} className="flex gap-2">
+                <input
+                  type="text"
+                  value={comment}
+                  onChange={function (e) {
+                    setComment(e.target.value);
+                  }}
+                  placeholder="Optional comment"
+                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm"
+                />
+                <button
+                  type="submit"
+                  className="bg-gray-900 text-white px-6 py-2 rounded-lg text-sm"
+                >
+                  Send comment
+                </button>
+              </form>
+            ) : null}
+
+            {rating && commentSent ? (
+              <p className="text-sm text-gray-600">Thanks for your feedback.</p>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>
