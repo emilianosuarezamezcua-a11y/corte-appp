@@ -26,6 +26,80 @@ const QUESTIONS = [
   },
 ];
 
+const GUARDRAIL_WORDS = [
+  'tax',
+  'legal',
+  'lawyer',
+  'lawsuit',
+  'loan',
+  'password',
+  'card number',
+  'credit card',
+  'debit card',
+  'cvv',
+];
+
+const GUARDRAIL_REPLY =
+  'I cannot help with taxes, legal advice, loans, passwords, or card numbers. Please talk to a professional for those topics. I can help with prices, profit, expenses, and how the app works.';
+
+function isGuardrail(text) {
+  const lower = text.toLowerCase();
+  for (let i = 0; i < GUARDRAIL_WORDS.length; i++) {
+    if (lower.indexOf(GUARDRAIL_WORDS[i]) !== -1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function hasAny(text, words) {
+  for (let i = 0; i < words.length; i++) {
+    if (text.indexOf(words[i]) !== -1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getReply(text) {
+  const lower = text.toLowerCase();
+
+  if (hasAny(lower, ['price', 'plan', 'how much', 'pay'])) {
+    return 'Corte App has 3 plans: Free, Growth at $99 MXN per month, and Pro at $199 MXN per month.';
+  }
+  if (hasAny(lower, ['profit', 'earn', 'gain'])) {
+    return 'Profit is what you sell minus what you spend. Corte App does this math for you every day.';
+  }
+  if (hasAny(lower, ['expense', 'spend', 'spent', 'cost'])) {
+    return 'Write each expense with an amount and a short note. Corte App subtracts it from your sales to show your profit.';
+  }
+  if (hasAny(lower, ['how', 'work', 'app', 'use'])) {
+    return 'You write your sales and expenses during the day. At the end of the day you do a cut and see your profit.';
+  }
+  return 'I am not sure about that one. I can answer questions about price, profit, expenses, and how the app works.';
+}
+
+function getRecommendation(answers) {
+  let plan = 'Free';
+  let price = 'free';
+  if (answers.business_type === 'Street stand') {
+    plan = 'Growth';
+    price = '$99 MXN per month';
+  } else if (answers.business_type === 'Small restaurant') {
+    plan = 'Pro';
+    price = '$199 MXN per month';
+  }
+
+  let tip = 'Tip: Do one quick cut at the end of the day instead of many notes.';
+  if (answers.main_problem === 'I do not know my profit') {
+    tip = 'Tip: Write every sale and every expense each day. Corte App shows your profit at the end of the day.';
+  } else if (answers.main_problem === 'I forget to write my expenses') {
+    tip = 'Tip: Write each expense right when you pay it, even the small ones.';
+  }
+
+  return 'Based on your answers, I recommend the ' + plan + ' plan (' + price + '). ' + tip;
+}
+
 function ChatBubble(props) {
   const isUser = props.role === 'user';
   return (
@@ -48,6 +122,7 @@ export default function ChatPage() {
   const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [input, setInput] = useState('');
 
   function handleStart() {
     setStarted(true);
@@ -71,9 +146,10 @@ export default function ChatPage() {
     if (nextStep < QUESTIONS.length) {
       newMessages.push({ role: 'assistant', text: QUESTIONS[nextStep].text });
     } else {
+      newMessages.push({ role: 'assistant', text: getRecommendation(newAnswers) });
       newMessages.push({
         role: 'assistant',
-        text: 'Thanks for your answers. Your plan recommendation is coming in the next update.',
+        text: 'You can now ask me a question about price, profit, expenses, or how the app works.',
       });
     }
 
@@ -81,7 +157,31 @@ export default function ChatPage() {
     setStep(nextStep);
   }
 
+  function handleSend(e) {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text) {
+      return;
+    }
+
+    let reply = '';
+    if (isGuardrail(text)) {
+      reply = GUARDRAIL_REPLY;
+    } else {
+      reply = getReply(text);
+    }
+
+    setMessages(
+      messages.concat([
+        { role: 'user', text: text },
+        { role: 'assistant', text: reply },
+      ])
+    );
+    setInput('');
+  }
+
   const showOptions = started && step < QUESTIONS.length;
+  const showInput = started && step >= QUESTIONS.length;
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-12">
@@ -128,6 +228,26 @@ export default function ChatPage() {
             );
           })}
         </div>
+      ) : null}
+
+      {showInput ? (
+        <form onSubmit={handleSend} className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={function (e) {
+              setInput(e.target.value);
+            }}
+            placeholder="Type your question here"
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm"
+          />
+          <button
+            type="submit"
+            className="bg-gray-900 text-white px-6 py-2 rounded-lg text-sm"
+          >
+            Send
+          </button>
+        </form>
       ) : null}
     </div>
   );
