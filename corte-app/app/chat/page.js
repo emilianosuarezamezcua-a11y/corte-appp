@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
 const WELCOME = 'Hi! I am the Corte App guide. I can help you find the right plan in 3 quick questions.';
@@ -25,6 +25,12 @@ const QUESTIONS = [
       'It takes me too much time',
     ],
   },
+];
+
+const QUICK_QUESTIONS = [
+  'What is the price?',
+  'How is my profit calculated?',
+  'Can I use it on my phone?',
 ];
 
 const GUARDRAIL_WORDS = [
@@ -65,6 +71,9 @@ function hasAny(text, words) {
 function getReply(text) {
   const lower = text.toLowerCase();
 
+  if (hasAny(lower, ['phone', 'mobile', 'cellphone', 'smartphone', 'android', 'iphone'])) {
+    return 'Corte App is a web page, so you can open it in the browser on your phone.';
+  }
   if (hasAny(lower, ['price', 'plan', 'how much', 'pay'])) {
     return 'Corte App has 3 plans: Free, Growth at $99 MXN per month, and Pro at $199 MXN per month.';
   }
@@ -138,6 +147,16 @@ export default function ChatPage() {
   const [rating, setRating] = useState(null);
   const [comment, setComment] = useState('');
   const [commentSent, setCommentSent] = useState(false);
+  const chatRef = useRef(null);
+
+  useEffect(
+    function () {
+      if (chatRef.current) {
+        chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      }
+    },
+    [messages]
+  );
 
   function handleStart() {
     setStarted(true);
@@ -210,13 +229,7 @@ export default function ChatPage() {
     }
   }
 
-  function handleSend(e) {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text) {
-      return;
-    }
-
+  function submitQuestion(text) {
     let reply = '';
     let triggered = guardrailSeen;
     if (isGuardrail(text)) {
@@ -236,6 +249,15 @@ export default function ChatPage() {
     setInput('');
 
     updateSession({ last_question: text, guardrail_triggered: triggered });
+  }
+
+  function handleSend(e) {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text) {
+      return;
+    }
+    submitQuestion(text);
   }
 
   function handleHuman() {
@@ -291,7 +313,8 @@ export default function ChatPage() {
       </p>
 
       <div
-        className="space-y-3 border border-gray-200 rounded-lg bg-gray-50 p-4 mb-4"
+        ref={chatRef}
+        className="space-y-3 border border-gray-200 rounded-lg bg-gray-50 p-4 mb-4 max-h-[28rem] overflow-y-auto"
         role="log"
         aria-live="polite"
       >
@@ -329,6 +352,22 @@ export default function ChatPage() {
 
       {showInput ? (
         <div>
+          <p className="text-sm font-medium mb-2">Ask me a question</p>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {QUICK_QUESTIONS.map(function (q) {
+              return (
+                <button
+                  key={q}
+                  onClick={function () {
+                    submitQuestion(q);
+                  }}
+                  className="border border-gray-300 bg-white text-gray-900 px-3 py-1 rounded-full text-xs hover:bg-gray-100"
+                >
+                  {q}
+                </button>
+              );
+            })}
+          </div>
           <form onSubmit={handleSend} className="flex gap-2 mb-3">
             <input
               type="text"
@@ -337,11 +376,11 @@ export default function ChatPage() {
                 setInput(e.target.value);
               }}
               placeholder="Type your question here"
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm"
+              className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-base"
             />
             <button
               type="submit"
-              className="bg-gray-900 text-white px-6 py-2 rounded-lg text-sm"
+              className="bg-gray-900 text-white px-6 py-3 rounded-lg text-base"
             >
               Send
             </button>
