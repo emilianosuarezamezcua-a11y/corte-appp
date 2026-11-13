@@ -11,6 +11,12 @@ export const WALKTHROUGH = [
   { href: '/docs', title: 'Docs', text: 'Read the build logs and the prompt library for weeks 1 to 6.' },
 ];
 
+export const PLANS = [
+  { name: 'Free', price: '0 MXN per month' },
+  { name: 'Growth', price: '99 MXN per month' },
+  { name: 'Pro', price: '199 MXN per month' },
+];
+
 export const AGENTS = [
   { name: 'Core agent', page: '/core', input: 'Business description text', logic: 'Sentence split and keyword matching', output: 'Problem, user, value, 5 key terms', table: 'core_outputs' },
   { name: 'Research page', page: '/research', input: 'Research note and category', logic: 'Static data plus a note form', output: 'Examples, competitors, risk map, saved notes', table: 'research_notes' },
@@ -35,13 +41,19 @@ export const IMPACT = {
 };
 
 export const ROADMAP = [
-  { phase: 'Now (Version 1)', items: ['Rule-based agents on 5 pages', 'Data saved in 6 Supabase tables', 'Dashboard, docs and demo pages'] },
-  { phase: 'Next (Version 2)', items: ['Answer more than one question in the chat', 'Turn on row security and add simple login', 'Daily profit and expense form for the vendor', 'Test with real food vendors, not only classmates'] },
-  { phase: 'Later (Version 3)', items: ['Optional live AI answers with a free tier', 'Weekly profit summary by message', 'Mobile friendly install on the phone'] },
+  { phase: 'Now (Version 1)', items: ['Rule-based agents on 5 pages', 'Data saved in 6 Supabase tables', 'Dashboard, docs and demo pages', 'Always visible menu and plan prices on the demo page'] },
+  { phase: 'Next (Version 2)', items: ['Answer more than one question in the chat', 'Shorter instructions in the chat (Valeria)', 'Show a visible message when a pricing scenario is saved (Andrea)', 'Show plan prices at the top of the pricing simulator (Daniel)', 'Turn on row security and add simple login', 'Test with real food vendors, not only classmates'] },
+  { phase: 'Later (Version 3)', items: ['More plan options in the simulator (Jorge)', 'Daily profit and expense form for the vendor', 'Optional live AI answers with a free tier', 'Weekly profit summary by message'] },
 ];
 
-// Fill these with REAL results after the tests are done.
-export const TESTERS = [];
+// Real results from 5 external testers. Feedback was given to me in Spanish and translated here.
+export const TESTERS = [
+  { name: 'Lucia', task: 'Tried chat and pricing', feedback: 'Looked for a navigation menu before seeing the main demo button. Would make the menu more visible at the top.', change: 'Made the menu fixed at the top and added a Start the walkthrough button.' },
+  { name: 'Daniel', task: 'Tried chat and pricing', feedback: 'Did not find the prices right away on the simulator page. Would put the prices more accessible at the start of the simulator.', change: 'Added a plan prices strip at the top of the demo page. The simulator itself is in the Version 2 roadmap.' },
+  { name: 'Valeria', task: 'Tried chat and pricing', feedback: 'Got stuck for a moment understanding how the assistant rules worked in the chat. Would use shorter instructions in the chat.', change: 'No change this week. Added to the Version 2 roadmap.' },
+  { name: 'Jorge', task: 'Tried chat and pricing', feedback: 'No confusion seen in the pricing simulator. Would add more plan options in the simulator.', change: 'No change. More plans are out of scope this week, added to the roadmap.' },
+  { name: 'Andrea', task: 'Tried chat and pricing', feedback: 'Doubted if the simulator saved changes to the database automatically. Would add a visual notice when data is saved to Supabase.', change: 'No change this week. Added to the Version 2 roadmap.' },
+];
 
 export const REGRESSION = [
   { area: 'Navigation', check: 'Every link in the nav bar opens its page', status: 'Not run yet' },
