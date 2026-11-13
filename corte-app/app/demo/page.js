@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import {
   WALKTHROUGH,
+  PLANS,
   AGENTS,
   IMPACT,
   ROADMAP,
@@ -18,9 +19,26 @@ export default function DemoPage() {
           page is a guided tour of the whole site. All agents here are rule-based and
           simulated. None of them is a live AI.
         </p>
+        <a
+          href="#walkthrough"
+          className="mt-4 inline-block rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+        >
+          Start the walkthrough
+        </a>
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          {PLANS.map(function (p) {
+            return (
+              <div key={p.name} className="rounded-lg border border-gray-200 bg-white p-4">
+                <p className="text-sm text-gray-500">Plan</p>
+                <p className="font-semibold">{p.name}</p>
+                <p className="text-sm text-gray-700">{p.price}</p>
+              </div>
+            );
+          })}
+        </div>
       </header>
 
-      <section className="space-y-4">
+      <section id="walkthrough" className="space-y-4">
         <h2 className="text-2xl font-semibold">1. Guided walkthrough</h2>
         <p className="text-sm text-gray-600">Follow the steps in order. Each one opens a real page.</p>
         <ol className="space-y-3">
@@ -116,7 +134,7 @@ export default function DemoPage() {
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">4. Testing summary</h2>
         <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <h3 className="font-semibold">External users (goal: 5)</h3>
+          <h3 className="font-semibold">External users ({TESTERS.length} of 5)</h3>
           {TESTERS.length === 0 ? (
             <p className="mt-2 text-sm text-gray-600">No testers recorded yet.</p>
           ) : (
