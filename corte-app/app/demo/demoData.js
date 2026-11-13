@@ -55,10 +55,11 @@ export const TESTERS = [
   { name: 'Andrea', task: 'Tried chat and pricing', feedback: 'Doubted if the simulator saved changes to the database automatically. Would add a visual notice when data is saved to Supabase.', change: 'No change this week. Added to the Version 2 roadmap.' },
 ];
 
+// Regression test run on the live site on Nov 13, 2026 after the last deploy.
 export const REGRESSION = [
-  { area: 'Navigation', check: 'Every link in the nav bar opens its page', status: 'Not run yet' },
-  { area: 'Core', check: 'Core agent extracts and saves a result', status: 'Not run yet' },
-  { area: 'Pricing and Marketing', check: 'Simulator saves a scenario and A/B vote is counted', status: 'Not run yet' },
-  { area: 'Chat', check: 'Intake, guardrail and rating still work', status: 'Not run yet' },
-  { area: 'Dashboard', check: 'Counts increase after new records are saved', status: 'Not run yet' },
+  { area: 'Navigation', check: 'Every link in the nav bar opens its page', status: 'Passed. All 10 links opened without errors.' },
+  { area: 'Core', check: 'Core agent extracts and saves a result', status: 'Passed. Problem, user, value and 5 key terms shown. core_outputs went from 1 to 2.' },
+  { area: 'Pricing and Marketing', check: 'Simulator saves a scenario and A/B vote is counted', status: 'Passed. pricing_scenarios went from 5 to 6. ab_votes went from 20 to 22.' },
+  { area: 'Chat', check: 'Intake, guardrail and rating still work', status: 'Passed. Intake, guardrail and rating worked. chat_sessions went from 15 to 16.' },
+  { area: 'Dashboard', check: 'Counts increase after new records are saved', status: 'Passed. Total records went from 46 to 51.' },
 ];
